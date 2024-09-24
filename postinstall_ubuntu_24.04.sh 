@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Post-install script for Ubuntu 24.04 LTS (Noble Numbat)
+
+# Adding canonical partner repo for Ubuntu 24.04
+sudo sed -i '/# deb http:\/\/archive.canonical.com\/ubuntu bionic partner/ c\deb http:\/\/archive.canonical.com\/ubuntu noble partner' /etc/apt/sources.list
+
+# Adding LibreOffice PPA (Optional as LibreOffice is usually updated in official repos)
+# sudo add-apt-repository -y ppa:libreoffice/ppa
+
+# F.lux PPA (if required)
+# sudo add-apt-repository -y ppa:nathan-renniewaldock/flux
+
+# Update repositories and upgrade system
+sudo apt-get -y update
+sudo apt-get -y update --allow-releaseinfo-change
+sudo apt-get -y upgrade
+
+# Installing necessary software
+sudo apt-get -y install firefox
+sudo apt-get -y install vim
+sudo apt-get -y install libreoffice
+sudo apt-get -y install gimp
+sudo apt-get -y install vlc
+sudo apt-get -y install gstreamer1.0-plugins-ugly gstreamer1.0-plugins-bad
+sudo apt-get -y install libavcodec-extra
+sudo apt-get -y install tuxpaint tuxmath tuxtype
+sudo apt-get -y install pencil2d
+sudo apt-get -y install spyder
+sudo apt-get -y install tlp
+sudo apt-get -y install dconf-editor
+sudo apt-get -y install overlayroot
+
+# Optional software installs (comment/uncomment as needed)
+# sudo apt-get -y install dosbox
+# sudo apt-get -y install virtualbox
+# sudo apt-get -y install redshift redshift-gtk
+# sudo apt-get -y install ubuntu-restricted-extras
+
+# Install and configure MySQL
+sudo apt-get -y install mysql-server
+echo "Configuring MySQL"
+sudo mysql_secure_installation
+sudo mysql -u root -pdbms -e "CREATE USER 'sacademy'@'localhost' IDENTIFIED BY 'dbms'; GRANT ALL PRIVILEGES ON *.* TO 'sacademy'@'localhost'; FLUSH PRIVILEGES;"
+sudo systemctl restart mysql
+
+# Enable system services
+sudo systemctl enable mysql
+
+# Cleanup and remove unnecessary packages
+sudo apt-get -y autoremove
+
+# Configure desktop environment settings
+cd ~/
+sudo chmod 777 Desktop
+sudo chmod 777 ~/Desktop/*.desktop
+
+# Create desktop shortcuts for installed applications
+cd /usr/share/applications
+cp tuxpaint.desktop ~/Desktop/
+cp tuxtype.desktop ~/Desktop/
+cp tuxmath.desktop ~/Desktop/
+cp libreoffice-writer.desktop ~/Desktop/
+cp libreoffice-calc.desktop ~/Desktop/
+cp libreoffice-impress.desktop ~/Desktop/
+cp pencil2d.desktop ~/Desktop/
+
+# Change Pencil2D desktop icon name
+sudo sed -i '/Name/ c\Name=Pencil' ~/Desktop/pencil2d.desktop
+
+# Set up MySQL desktop shortcut
+sudo cp libreoffice-base.desktop ~/Desktop/mysql.desktop
+sudo sed -i '/Exec/ c\Exec=mysql -u sacademy -pdbms' ~/Desktop/mysql.desktop
+sudo sed -i '/Name/ c\Name=MySQL' ~/Desktop/mysql.desktop
+
+# Disable screen lock and adjust power settings
+gsettings set org.gnome.desktop.session idle-delay 0
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+gsettings set org.gnome.desktop.lockdown disable-lock-screen true
+
+# Disable sleep/hibernate buttons
+gsettings set org.gnome.settings-daemon.plugins.power button-suspend "nothing"
+gsettings set org.gnome.settings-daemon.plugins.power button-hibernate "nothing"
+
+# Hide mounted drive icons from desktop
+gsettings set org.gnome.nautilus.desktop volumes-visible false
+
+# Set wallpaper
+gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/ubuntu-noble.png
+
+# Set GNOME favorites and dock icon size
+gsettings set org.gnome.shell favorite-apps "['org.gnome.Nautilus.desktop', 'firefox.desktop']"
+gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 30
+
+# Disable external search providers and autorun
+gsettings set org.gnome.desktop.search-providers disable-external true
+gsettings set org.gnome.desktop.media-handling automount-open false
+gsettings set org.gnome.desktop.media-handling autorun-never true
+
+# Remove all internet connections (if needed)
+# sudo rm -rf /etc/NetworkManager/system-connections/*
+
+# Restart network manager to apply changes
+sudo systemctl restart network-manager.service
+
+# Disable Avahi Daemon
+sudo systemctl disable avahi-daemon
+
+# Disable Evolution services
+sudo chmod -x /usr/lib/evolution/evolution-addressbook-factory
+sudo chmod -x /usr/lib/evolution/evolution-calendar-factory
+
+# Configure Bluetooth and Wi-Fi settings
+bluetooth off
+wifi off
+gsettings set com.ubuntu.touch.network flight-mode true
+
+# Mute sound
+amixer set 'Master' 0
+amixer set 'Master' mute
+
+# Final system cleanup
+sudo apt-get clean
