@@ -118,7 +118,7 @@ if ! grep -qxF "export HOMEBREW_PYTHON=\"$BREW_PREFIX/bin/python3\"" "$PROFILE_F
 fi
 
 # Add Homebrew Python to PATH
-if ! grep -qxF "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" "$PROFILE_FILE"; then
+if ! grep -qxF "export PATH=\"$BREW_PREFIX/bin/python3:\$PATH\"" "$PROFILE_FILE"; then
     echo "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" >> "$PROFILE_FILE"
 fi
 source $PROFILE_FILE # Reload profile to apply changes
