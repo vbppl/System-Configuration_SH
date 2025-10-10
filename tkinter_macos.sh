@@ -88,23 +88,39 @@ print_msg "Updating $PROFILE_FILE with Tcl/Tk environment variables..."
 sed -i.bak -E "/tcl-tk/d" "$PROFILE_FILE"
 
 # Add new Tcl/Tk paths to profile
-add_to_profile "export PATH=\"$BREW_PREFIX/opt/tcl-tk/bin:\$PATH\""
-add_to_profile "export LDFLAGS=\"-L$BREW_PREFIX/opt/tcl-tk/lib\""
-add_to_profile "export CPPFLAGS=\"-I$BREW_PREFIX/opt/tcl-tk/include\""
-add_to_profile "export PKG_CONFIG_PATH=\"$BREW_PREFIX/opt/tcl-tk/lib/pkgconfig\""
+if ! grep -qxF "export PATH=\"$BREW_PREFIX/opt/tcl-tk/bin:\$PATH\"" "$PROFILE_FILE"; then
+    echo "export PATH=\"$BREW_PREFIX/opt/tcl-tk/bin:\$PATH\"" >> "$PROFILE_FILE"
+fi
+
+if ! grep -qxF "export LDFLAGS=\"-L$BREW_PREFIX/opt/tcl-tk/lib\"" "$PROFILE_FILE"; then
+    echo "export LDFLAGS=\"-L$BREW_PREFIX/opt/tcl-tk/lib\"" >> "$PROFILE_FILE"
+fi
+
+if ! grep -qxF "export CPPFLAGS=\"-I$BREW_PREFIX/opt/tcl-tk/include\"" "$PROFILE_FILE"; then
+    echo "export CPPFLAGS=\"-I$BREW_PREFIX/opt/tcl-tk/include\"" >> "$PROFILE_FILE"
+fi
+
+if ! grep -qxF "export PKG_CONFIG_PATH=\"$BREW_PREFIX/opt/tcl-tk/lib/pkgconfig\"" "$PROFILE_FILE"; then
+    echo "export PKG_CONFIG_PATH=\"$BREW_PREFIX/opt/tcl-tk/lib/pkgconfig\"" >> "$PROFILE_FILE"
+fi
 source $PROFILE_FILE # Reload profile to apply changes
 
+# Remove old Python paths from profile
+sed -i.bak -E "/python[^ ]*\/bin/d" "$PROFILE_FILE"
 
 # Install/Reinstall latest Python via Homebrew
 print_msg "Installing/Reinstalling latest Python..."
 brew reinstall python # if you want to install a specific version, use `brew reinstall python@3.x`
 
 # Set Python path
-HOMEBREW_PYTHON="$BREW_PREFIX/bin/python3"
+if ! grep -qxF "export HOMEBREW_PYTHON=\"$BREW_PREFIX/bin/python3\"" "$PROFILE_FILE"; then
+    echo "export HOMEBREW_PYTHON=\"$BREW_PREFIX/bin/python3\"" >> "$PROFILE_FILE"
+fi
 
 # Add Homebrew Python to PATH
-grep -qxF "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" $PROFILE_FILE || \
-    echo "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" >> $PROFILE_FILE
+if ! grep -qxF "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" "$PROFILE_FILE"; then
+    echo "export PATH=\"$BREW_PREFIX/bin:\$PATH\"" >> "$PROFILE_FILE"
+fi
 source $PROFILE_FILE # Reload profile to apply changes
 
 
